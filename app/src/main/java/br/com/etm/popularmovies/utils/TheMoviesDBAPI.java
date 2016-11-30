@@ -3,11 +3,8 @@ package br.com.etm.popularmovies.utils;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,7 +19,6 @@ import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.concurrent.ExecutionException;
 
 import br.com.etm.popularmovies.R;
@@ -38,7 +34,7 @@ public class TheMoviesDBAPI {
     private final String URL_DEFAULT = "https://api.themoviedb.org/3";
     private final String URL_IMAGE = "https://image.tmdb.org/t/p/w500";
 
-    private final String MOVIES_UPCOMING = "/movie/upcoming";
+    private final String MOVIES_POPULAR = "/movie/popular";
     private final String MOVIES_TOP_RATED = "/movie/top_rated";
 
     private final String PARAM_KEY_API = "api_key";
@@ -50,7 +46,7 @@ public class TheMoviesDBAPI {
             if (PreferenceManager.getDefaultSharedPreferences(context).getString(
                     context.getString(R.string.key_pref_order),
                     context.getString(R.string.value_default_pref_order)).equals(context.getString(R.string.value_default_pref_order))) {
-                return new DownloadDataMovies().execute(MOVIES_UPCOMING).get();
+                return new DownloadDataMovies().execute(MOVIES_POPULAR).get();
             } else {
                 return new DownloadDataMovies().execute(MOVIES_TOP_RATED).get();
             }
