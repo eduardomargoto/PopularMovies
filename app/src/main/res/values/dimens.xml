@@ -1,0 +1,8 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="vertical_margin">16dp</dimen>
+    <dimen name="margin_cards">5dp</dimen>
+    <dimen name="margin_text">9dp</dimen>
+    <dimen name="text_small">12sp</dimen>
+    <dimen name="text_medium">14sp</dimen>
+</resources>

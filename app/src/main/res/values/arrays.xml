@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string-array name="pref_order">
+        <item>Most Popular</item>
+        <item>Top Rated</item>
+    </string-array>
+
+    <string-array name="value_pref_order">
+        <item>most_popular</item>
+        <item>top_rated</item>
+    </string-array>
+    
+</resources>

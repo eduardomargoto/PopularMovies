@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_detail_movie"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="br.com.etm.popularmovies.DetailMovieActivity">
+
+    <RelativeLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true">
+
+        <ImageView
+            android:id="@+id/iv_backdrop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_text" />
+
+        <ImageView
+            android:id="@+id/iv_poster"
+            style="@style/TextWithShadow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/vertical_margin"
+            android:layout_alignTop="@+id/iv_backdrop"
+            android:layout_alignLeft="@+id/iv_backdrop"
+            android:layout_alignStart="@+id/iv_backdrop"
+            android:layout_marginLeft="@dimen/margin_cards"
+            android:layout_marginStart="@dimen/margin_cards" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/TextWithShadow"
+            android:id="@+id/tv_rating"
+            android:layout_alignBottom="@+id/iv_rating"
+            android:layout_alignLeft="@+id/iv_rating"
+            android:layout_alignStart="@+id/iv_rating"
+            android:padding="@dimen/margin_text"
+            android:textSize="@dimen/text_small"
+            android:layout_marginLeft="26dp"
+            android:layout_alignTop="@+id/iv_rating" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@android:drawable/btn_star_big_on"
+            android:id="@+id/iv_rating"
+            android:layout_alignBottom="@+id/iv_poster"
+            android:layout_toRightOf="@+id/iv_poster"
+            android:layout_toEndOf="@+id/iv_poster"
+            android:layout_marginBottom="@dimen/margin_cards" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/tv_release_date"
+            style="@style/TextWithShadow"
+            android:layout_alignTop="@+id/iv_backdrop"
+            android:layout_alignRight="@+id/iv_backdrop"
+            android:layout_alignEnd="@+id/iv_backdrop"
+            android:layout_marginTop="@dimen/margin_text"
+            android:layout_marginRight="@dimen/margin_text"
+            android:textSize="@dimen/text_small"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/tv_overview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/container"
+        android:layout_marginLeft="@dimen/margin_text"
+        android:layout_marginRight="@dimen/margin_text"
+        android:layout_marginTop="@dimen/margin_text"
+        android:textSize="@dimen/text_medium" />
+
+</RelativeLayout>
+
+
+
+
+
