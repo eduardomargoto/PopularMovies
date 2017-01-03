@@ -2,4 +2,5 @@
 
 Course Android Developer Udacity, produced by Google.
 
-Project 1: PopularMovies, Stage 1.
+Project 1: PopularMovies, Stage 1 e 2.
+
