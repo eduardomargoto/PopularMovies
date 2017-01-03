@@ -1,82 +1,101 @@
 package br.com.etm.popularmovies;
 
 import android.content.Intent;
-import android.content.res.Configuration;
+import android.database.Cursor;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import java.util.ArrayList;
-
+import br.com.etm.popularmovies.data.PopularMovieContract;
 import br.com.etm.popularmovies.domains.Movie;
-import br.com.etm.popularmovies.utils.TheMoviesDBAPI;
-import br.com.etm.popularmovies.utils.Utils;
 
 public class MainActivity extends AppCompatActivity {
 
-    private MovieAdapter adapter;
+    public static final String KEY_ARG_MOVIE = "MARG";
+    private final String LOG_TAG = MainActivity.class.getSimpleName();
+
+    private String mCriteriaOrder;
+
+    private boolean mTwoPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
 
-        GridLayoutManager gridLayoutManager;
-        // Check a orientation
-        // for create a grid with 3 or 5 columns.
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
-            gridLayoutManager = new GridLayoutManager(this, 5);
-        else
-            gridLayoutManager = new GridLayoutManager(this, 3);
+        mCriteriaOrder = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_pref_order), getString(R.string.value_default_pref_order));
 
-        recyclerView.setLayoutManager(gridLayoutManager);
+        if (findViewById(R.id.detail_movie_container) != null) {
+            mTwoPane = true;
+            if (savedInstanceState == null) {
+                Bundle arguments = new Bundle();
+                FragmentMovie fm = (FragmentMovie) getSupportFragmentManager().findFragmentById(R.id.fragment_movie);
+                if (fm.getMovieAdapter().getFirstMovie() != null) {
+                    arguments.putSerializable(KEY_ARG_MOVIE, fm.getMovieAdapter().getFirstMovie());
 
-        // create adapter with a list of movie empty
-        // Feed the list with method onStart.
-        adapter = new MovieAdapter(this, new ArrayList<Movie>());
+                    FragmentDetailMovie fdm = new FragmentDetailMovie();
+                    fdm.setArguments(arguments);
+                    getSupportFragmentManager().beginTransaction().add(R.id.detail_movie_container, fdm, KEY_ARG_MOVIE)
+                            .commit();
+                }
+            }
+        } else {
+            mTwoPane = false;
+        }
+    }
 
-        // set adapter
-        recyclerView.setAdapter(adapter);
+    public void onMovieChanged(Movie movie) {
+        if (movie != null) {
+            Bundle arguments = new Bundle();
+            arguments.putSerializable(KEY_ARG_MOVIE, movie);
+
+            FragmentDetailMovie fdm = new FragmentDetailMovie();
+            fdm.setArguments(arguments);
+            getSupportFragmentManager().beginTransaction().replace(R.id.detail_movie_container, fdm, KEY_ARG_MOVIE)
+                    .commit();
+        } else {
+            getSupportFragmentManager().beginTransaction().replace(R.id.detail_movie_container, new FragmentDetailMovie(), KEY_ARG_MOVIE)
+                    .commit();
+        }
+    }
+
+    public boolean isTwoPane() {
+        return mTwoPane;
+    }
+
+    public String getCriteriaOrder() {
+        return mCriteriaOrder;
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        String criteria = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_pref_order), getString(R.string.value_default_pref_order));
+        if (!mCriteriaOrder.equals(criteria)) {
+            FragmentMovie fm = (FragmentMovie) getSupportFragmentManager().findFragmentById(R.id.fragment_movie);
+            if (fm != null) {
+                if (criteria.equals(getString(R.string.value_favorites_pref_order))) {
+                    Cursor cursor = this.getContentResolver().query(PopularMovieContract.MovieEntry.CONTENT_URI, null, null, null, null);
+                    fm.updateMoviesTask(cursor);
+                } else fm.updateMoviesTask(null);
+
+                if (mTwoPane)
+                    onMovieChanged(fm.getMovieAdapter().getFirstMovie());
+            }
+        }
+
+        mCriteriaOrder = criteria;
+
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        // Check in internet connection, to prevent an exception
-        // or can too, do a try catch, but i chose to do so.
-        if (Utils.checkConn(this)) {
-            findViewById(R.id.empty_view).setVisibility(View.INVISIBLE);
-            updateMoviesTask();
-        } else findViewById(R.id.empty_view).setVisibility(View.VISIBLE);
-    }
-
-
-    /**
-     * method for update recyclerView with movies.
-     * Do a background UI for a internet connection.
-     */
-    private void updateMoviesTask() {
-        adapter.clear();
-        // get a movies
-        ArrayList<Movie> movies = new TheMoviesDBAPI().getMovies(this);
-
-        // add movies in recycler view
-        for (Movie m : movies)
-            adapter.add(m);
     }
 
     @Override
@@ -90,4 +109,5 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
 }

@@ -1,10 +1,24 @@
-<resources>
+<resources  xmlns:xliff="http://schemas.android.com/apk/res-auto">
     <string name="app_name">PopularMovies</string>
     <string name="settings">Settings</string>
+    <string name="share">Share</string>
     <string name="title_pref_order">Sort Order Movies</string>
     <string name="key_pref_order" translatable="false">order_movies</string>
     <string name="value_default_pref_order" translatable="false">most_popular</string>
+    <string name="value_favorites_pref_order" translatable="false">favorites</string>
+
     <string name="no_internet_available">Check your internet connection.</string>
+    <string name="no_movie_favorite">No favorite movies.</string>
+    <string name="no_reviews_found">No reviews found.</string>
+    <string name="no_trailers_found">No trailers found.</string>
+
+    <string name="content_authority" translatable="false">br.com.etm.popularmovies</string>
+
+    <string name="rating_movie">Rating: <xliff:g id="rating"> %.1f</xliff:g>/10 ( <xliff:g id="vote_count"> %d </xliff:g> )</string>
 
     <string name="message_error">Occurred a error, please contact the developer!</string>
+
+    <string name="detail_movie">DetailMovie</string>
+    <string name="subtitle_trailers">Trailers</string>
+    <string name="subtitle_reviews">Reviews</string>
 </resources>

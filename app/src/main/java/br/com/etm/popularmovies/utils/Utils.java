@@ -33,8 +33,6 @@ public class Utils {
             return false;
         if (!i.isConnected())
             return false;
-        if (!i.isAvailable())
-            return false;
-        return true;
+        return i.isAvailable();
     }
 }

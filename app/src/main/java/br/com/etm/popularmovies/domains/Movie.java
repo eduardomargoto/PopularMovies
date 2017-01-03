@@ -1,7 +1,13 @@
 package br.com.etm.popularmovies.domains;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.text.format.Time;
+
 import java.io.Serializable;
 import java.util.Date;
+
+import br.com.etm.popularmovies.data.PopularMovieContract;
 
 /**
  * Created by EDUARDO_MARGOTO on 11/29/2016.
@@ -9,23 +15,54 @@ import java.util.Date;
 
 public class Movie implements Serializable {
 
+    private long movie_id;
     private String title;
     private String path_poster;
     private String backdrop_path;
     private String overview;
-    private String rating;
-    private String vote_count;
+    private float rating;
+    private int vote_count;
     private Date releaseDate;
+    private boolean favorite;
 
+
+    public Movie(Cursor cursor) {
+        movie_id = cursor.getInt(cursor.getColumnIndex(PopularMovieContract.MovieEntry._ID));
+        title = cursor.getString(cursor.getColumnIndex(PopularMovieContract.MovieEntry.COLUMN_TITLE));
+        overview = cursor.getString(cursor.getColumnIndex(PopularMovieContract.MovieEntry.COLUMN_OVERVIEW));
+        vote_count = cursor.getInt(cursor.getColumnIndex(PopularMovieContract.MovieEntry.COLUMN_VOTE_COUNT));
+        rating = cursor.getFloat(cursor.getColumnIndex(PopularMovieContract.MovieEntry.COLUMN_RATING));
+        path_poster = cursor.getString(cursor.getColumnIndex(PopularMovieContract.MovieEntry.COLUMN_PATH_POSTER));
+        backdrop_path = cursor.getString(cursor.getColumnIndex(PopularMovieContract.MovieEntry.COLUMN_PATH_BACKDROP));
+        int julianDay = cursor.getInt(cursor.getColumnIndex(PopularMovieContract.MovieEntry.COLUMN_RELEASE_DATE));
+        releaseDate = new Date(julianDay);
+        favorite = true;
+    }
 
     public Movie() {
     }
 
-    public String getVote_count() {
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
+    public long getMovieId() {
+        return movie_id;
+    }
+
+    public void setMovieId(long id) {
+        this.movie_id = id;
+    }
+
+    public int getVote_count() {
         return vote_count;
     }
 
-    public void setVote_count(String vote_count) {
+    public void setVote_count(int vote_count) {
         this.vote_count = vote_count;
     }
 
@@ -53,11 +90,11 @@ public class Movie implements Serializable {
         this.overview = overview;
     }
 
-    public String getRating() {
+    public float getRating() {
         return rating;
     }
 
-    public void setRating(String rating) {
+    public void setRating(float rating) {
         this.rating = rating;
     }
 
@@ -77,4 +114,21 @@ public class Movie implements Serializable {
         this.title = title;
     }
 
+    public ContentValues getContentValues() {
+        Time dayTime = new Time();
+        dayTime.set(releaseDate.getTime());
+        int julianDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
+
+        ContentValues values = new ContentValues();
+        values.put(PopularMovieContract.MovieEntry._ID, movie_id);
+        values.put(PopularMovieContract.MovieEntry.COLUMN_TITLE, title);
+        values.put(PopularMovieContract.MovieEntry.COLUMN_PATH_BACKDROP, backdrop_path);
+        values.put(PopularMovieContract.MovieEntry.COLUMN_PATH_POSTER, path_poster);
+        values.put(PopularMovieContract.MovieEntry.COLUMN_RATING, rating);
+        values.put(PopularMovieContract.MovieEntry.COLUMN_VOTE_COUNT, vote_count);
+        values.put(PopularMovieContract.MovieEntry.COLUMN_RELEASE_DATE, julianDay);
+        values.put(PopularMovieContract.MovieEntry.COLUMN_OVERVIEW, overview);
+
+        return values;
+    }
 }
