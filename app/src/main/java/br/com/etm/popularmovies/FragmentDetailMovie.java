@@ -3,12 +3,15 @@ package br.com.etm.popularmovies;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.os.ResultReceiver;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.ShareActionProvider;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,6 +22,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.squareup.picasso.Picasso;
+
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -28,9 +33,14 @@ import br.com.etm.popularmovies.data.PopularMovieContract;
 import br.com.etm.popularmovies.domains.Movie;
 import br.com.etm.popularmovies.domains.Review;
 import br.com.etm.popularmovies.domains.Trailer;
+import br.com.etm.popularmovies.service.ReviewsService;
+import br.com.etm.popularmovies.service.TrailersService;
 import br.com.etm.popularmovies.utils.TheMoviesDBAPI;
 
 import static br.com.etm.popularmovies.MainActivity.KEY_ARG_MOVIE;
+import static br.com.etm.popularmovies.service.ReviewsService.KEY_RECEIVER;
+import static br.com.etm.popularmovies.service.TrailersService.KEY_RESULT_TRAILERS;
+import static br.com.etm.popularmovies.utils.TheMoviesDBAPI.URL_IMAGE;
 
 /**
  * Created by EDUARDO_MARGOTO on 12/31/2016.
@@ -79,23 +89,12 @@ public class FragmentDetailMovie extends Fragment {
 
         Cursor cursor = getContext().getContentResolver().query(
                 PopularMovieContract.MovieEntry.CONTENT_URI, null, PopularMovieContract.MovieEntry._ID + " = ?", new String[]{String.valueOf(mMovie.getMovieId())}, null);
-        if (cursor!= null && cursor.moveToNext()) {
+        if (cursor != null && cursor.moveToNext()) {
             mMovie.setFavorite(true);
             cursor.close();
         }
 
-        try {
-            if (mMovie != null)
-                holder.iv_backdrop.setImageBitmap(
-                        new TheMoviesDBAPI().getBitmap(mMovie.getBackdrop_path())
-                );
-        } catch (InterruptedException e) {
-            Toast.makeText(getContext(), getString(R.string.message_error), Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            Toast.makeText(getContext(), getString(R.string.message_error), Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        }
+        Picasso.with(getContext()).load(URL_IMAGE + mMovie.getBackdrop_path()).into(holder.iv_backdrop);
 
         holder.tv_title_movie.setText(mMovie.getTitle());
 
@@ -119,11 +118,7 @@ public class FragmentDetailMovie extends Fragment {
                         MainActivity activity = ((MainActivity) getActivity());
                         FragmentMovie fm = (FragmentMovie) getActivity().getSupportFragmentManager().findFragmentById(R.id.fragment_movie);
                         if (fm != null) {
-                            if (activity.getCriteriaOrder().equals(getString(R.string.value_favorites_pref_order))) {
-                                Cursor cursor = getActivity().getContentResolver().query(PopularMovieContract.MovieEntry.CONTENT_URI, null, null, null, null);
-                                fm.updateMoviesTask(cursor);
-                            } else fm.updateMoviesTask(null);
-
+                            fm.updateMoviesTask();
                             activity.onMovieChanged(fm.getMovieAdapter().getFirstMovie());
                         }
                     }
@@ -202,33 +197,117 @@ public class FragmentDetailMovie extends Fragment {
     }
 
 
-
     public void updateReviews() {
-        if (mReviewAdapter != null) {
-            mReviewAdapter.clear();
-            ArrayList<Review> reviews = new TheMoviesDBAPI().getReviews((int) mMovie.getMovieId());
-            if(getView().findViewById(R.id.empty_review) != null && reviews.isEmpty()){
-                getView().findViewById(R.id.empty_review).setVisibility(View.VISIBLE);
-            }
-            for (Review r : reviews) {
-                mReviewAdapter.add(r);
+        MyReviewReceiver reviewReceiver = new MyReviewReceiver(new Handler());
+
+        Intent intent = new Intent(getActivity(), ReviewsService.class);
+        intent.putExtra(ReviewsService.MOVIE_ID_QUERY_EXTRA, String.valueOf(mMovie.getMovieId()));
+        intent.putExtra(KEY_RECEIVER, reviewReceiver);
+
+        getActivity().startService(intent);
+
+//        if (mReviewAdapter != null) {
+//            mReviewAdapter.clear();
+//            ArrayList<Review> reviews = new TheMoviesDBAPI().getReviews((int) mMovie.getMovieId());
+//            if(getView().findViewById(R.id.empty_review) != null && reviews.isEmpty()){
+//                getView().findViewById(R.id.empty_review).setVisibility(View.VISIBLE);
+//            }
+//            for (Review r : reviews) {
+//                mReviewAdapter.add(r);
+//            }
+//        }
+    }
+
+    public void updateTrailers() {
+        MyTrailerReceiver trailerReceiver = new MyTrailerReceiver(new Handler());
+
+        Intent intent = new Intent(getActivity(), TrailersService.class);
+        intent.putExtra(TrailersService.MOVIE_ID_QUERY_EXTRA, String.valueOf(mMovie.getMovieId()));
+        intent.putExtra(KEY_RECEIVER, trailerReceiver);
+
+        getActivity().startService(intent);
+
+//        if (mTrailerAdapter != null) {
+//            mTrailerAdapter.clear();
+//            ArrayList<Trailer> trailers = new TheMoviesDBAPI().getTrailers((int) mMovie.getMovieId());
+//            if(getView().findViewById(R.id.empty_trailers) != null && trailers.isEmpty()){
+//                getView().findViewById(R.id.empty_trailers).setVisibility(View.VISIBLE);
+//            }
+//
+//            for (Trailer t : trailers) {
+//                mTrailerAdapter.add(t);
+//            }
+//            if (mShareActionProvider != null) {
+//                mShareActionProvider.setShareIntent(createShareTrailerIntent());
+//            }
+//        }
+    }
+
+
+    class MyTrailerReceiver extends ResultReceiver {
+
+        /**
+         * Create a new ResultReceive to receive results.  Your
+         * {@link #onReceiveResult} method will be called from the thread running
+         * <var>handler</var> if given, or from an arbitrary thread if null.
+         *
+         * @param handler
+         */
+        public MyTrailerReceiver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            if (mTrailerAdapter != null) {
+                mTrailerAdapter.clear();
+
+                ArrayList<Trailer> trailers = (ArrayList<Trailer>) resultData.getSerializable(KEY_RESULT_TRAILERS);
+
+                if ((getView() != null && getView().findViewById(R.id.empty_trailers) != null) &&
+                        (trailers != null && trailers.isEmpty())) {
+                    getView().findViewById(R.id.empty_trailers).setVisibility(View.VISIBLE);
+                }
+
+                for (Trailer t : trailers) {
+                    mTrailerAdapter.add(t);
+                }
+
+                if (mShareActionProvider != null) {
+                    mShareActionProvider.setShareIntent(createShareTrailerIntent());
+                }
             }
         }
     }
 
-    public void updateTrailers() {
-        if (mTrailerAdapter != null) {
-            mTrailerAdapter.clear();
-            ArrayList<Trailer> trailers = new TheMoviesDBAPI().getTrailers((int) mMovie.getMovieId());
-            if(getView().findViewById(R.id.empty_trailers) != null && trailers.isEmpty()){
-                getView().findViewById(R.id.empty_trailers).setVisibility(View.VISIBLE);
-            }
+    class MyReviewReceiver extends ResultReceiver {
 
-            for (Trailer t : trailers) {
-                mTrailerAdapter.add(t);
-            }
-            if (mShareActionProvider != null) {
-                mShareActionProvider.setShareIntent(createShareTrailerIntent());
+        /**
+         * Create a new ResultReceive to receive results.  Your
+         * {@link #onReceiveResult} method will be called from the thread running
+         * <var>handler</var> if given, or from an arbitrary thread if null.
+         *
+         * @param handler
+         */
+        public MyReviewReceiver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            if (mReviewAdapter != null) {
+                mReviewAdapter.clear();
+
+                ArrayList<Review> reviews = (ArrayList<Review>) resultData.getSerializable(ReviewsService.KEY_RESULT_REVIEWS);
+
+                if ((getView() != null && getView().findViewById(R.id.empty_review) != null) &&
+                        (reviews != null && reviews.isEmpty())) {
+                    getView().findViewById(R.id.empty_review).setVisibility(View.VISIBLE);
+                }
+
+                for (Review r : reviews) {
+                    mReviewAdapter.add(r);
+                }
             }
         }
     }

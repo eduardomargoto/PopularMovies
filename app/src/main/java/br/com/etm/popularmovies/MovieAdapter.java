@@ -11,11 +11,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 import br.com.etm.popularmovies.domains.Movie;
 import br.com.etm.popularmovies.utils.TheMoviesDBAPI;
+
+import static br.com.etm.popularmovies.utils.TheMoviesDBAPI.URL_IMAGE;
 
 /**
  * Created by EDUARDO_MARGOTO on 11/29/2016.
@@ -41,19 +45,9 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MyViewHolder
     @Override
     public void onBindViewHolder(final MyViewHolder holder, int position) {
         final Movie movie = mMovies.get(position);
-        Bitmap bitmap = null;
-        try {
-            bitmap = new TheMoviesDBAPI().getBitmap(movie.getPath_poster());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            Toast.makeText(activity, activity.getString(R.string.message_error), Toast.LENGTH_SHORT).show();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            Toast.makeText(activity, activity.getString(R.string.message_error), Toast.LENGTH_SHORT).show();
-        }
 
+        Picasso.with(activity).load(URL_IMAGE + movie.getPath_poster()).into(holder.image_banner);
 
-        holder.image_banner.setImageBitmap(bitmap);
         final int positionAdapter = holder.getAdapterPosition();
         holder.image_banner.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,15 +65,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MyViewHolder
             }
         });
 
-    }
-
-    public ArrayList<Movie> getMovies() {
-        return mMovies;
-    }
-
-
-    public void setMovies(ArrayList<Movie> mMovies) {
-        this.mMovies = mMovies;
     }
 
     @Override

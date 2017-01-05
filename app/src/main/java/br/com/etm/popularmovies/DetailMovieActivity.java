@@ -44,7 +44,7 @@ public class DetailMovieActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (Utils.checkConn(this) && fragmentDetailMovie != null) {
+        if (Utils.checkConnection(this) && fragmentDetailMovie != null) {
             fragmentDetailMovie.updateTrailers();
             fragmentDetailMovie.updateReviews();
         }

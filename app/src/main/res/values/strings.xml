@@ -4,8 +4,14 @@
     <string name="share">Share</string>
     <string name="title_pref_order">Sort Order Movies</string>
     <string name="key_pref_order" translatable="false">order_movies</string>
+
     <string name="value_default_pref_order" translatable="false">most_popular</string>
     <string name="value_favorites_pref_order" translatable="false">favorites</string>
+    <string name="value_top_rated_pref_order" translatable="false">top_rated</string>
+
+    <string name="title_default_pref_order" >Most Popular</string>
+    <string name="title_favorites_pref_order" >Favorites</string>
+    <string name="title_top_rated_pref_order">Top Rated</string>
 
     <string name="no_internet_available">Check your internet connection.</string>
     <string name="no_movie_favorite">No favorite movies.</string>
@@ -21,4 +27,5 @@
     <string name="detail_movie">DetailMovie</string>
     <string name="subtitle_trailers">Trailers</string>
     <string name="subtitle_reviews">Reviews</string>
+    <string name="order">Order</string>
 </resources>

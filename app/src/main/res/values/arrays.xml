@@ -2,15 +2,15 @@
 <resources>
     
     <string-array name="pref_order">
-        <item>Most Popular</item>
-        <item>Top Rated</item>
-        <item>Favorites</item>
+        <item>@string/title_default_pref_order</item>
+        <item>@string/title_top_rated_pref_order</item>
+        <item>@string/title_favorites_pref_order</item>
     </string-array>
 
     <string-array name="value_pref_order">
-        <item>most_popular</item>
-        <item>top_rated</item>
-        <item>favorites</item>
+        <item>@string/value_default_pref_order</item>
+        <item>@string/value_top_rated_pref_order</item>
+        <item>@string/value_favorites_pref_order</item>
     </string-array>
     
 </resources>

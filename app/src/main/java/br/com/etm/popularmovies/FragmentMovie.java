@@ -1,14 +1,20 @@
 package br.com.etm.popularmovies;
 
-import android.database.Cursor;
+import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.os.ResultReceiver;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
@@ -16,12 +22,13 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import br.com.etm.popularmovies.data.PopularMovieContract;
 import br.com.etm.popularmovies.domains.Movie;
-import br.com.etm.popularmovies.utils.TheMoviesDBAPI;
+import br.com.etm.popularmovies.service.MoviesService;
 import br.com.etm.popularmovies.utils.Utils;
 
 import static android.view.View.GONE;
+import static br.com.etm.popularmovies.service.MoviesService.KEY_RECEIVER;
+import static br.com.etm.popularmovies.service.MoviesService.KEY_RESULT_QUERY_EXTRA;
 
 /**
  * Created by EDUARDO_MARGOTO on 12/31/2016.
@@ -29,10 +36,11 @@ import static android.view.View.GONE;
 
 public class FragmentMovie extends Fragment {
 
-    private final String LOG_TAG = MainActivity.class.getSimpleName();
+    private final String LOG_TAG = FragmentMovie.class.getSimpleName();
     private MovieAdapter mMovieAdapter;
     private int mPosition;
     public static final String SELECTED_KEY = "selected_position";
+
 
     @Nullable
     @Override
@@ -53,7 +61,6 @@ public class FragmentMovie extends Fragment {
         // set adapter
         recyclerView.setAdapter(mMovieAdapter);
 
-
         if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
             mPosition = savedInstanceState.getInt(SELECTED_KEY);
             recyclerView.scrollToPosition(mPosition);
@@ -64,21 +71,13 @@ public class FragmentMovie extends Fragment {
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        if (PreferenceManager.getDefaultSharedPreferences(getContext()).getString(getString(R.string.key_pref_order), getString(R.string.value_default_pref_order))
-                .equals(getString(R.string.value_favorites_pref_order))) {
-            Cursor cursor = getContext().getContentResolver().query(PopularMovieContract.MovieEntry.CONTENT_URI, null, null, null, null);
-            updateMoviesTask(cursor);
-        } else {
-            updateMoviesTask(null);
-        }
+        Log.v(LOG_TAG, "onViewCreated");
+        updateMoviesTask();
 
         super.onViewCreated(view, savedInstanceState);
 
     }
 
-    public int getPosition() {
-        return mPosition;
-    }
 
     public void setPosition(int mPosition) {
         this.mPosition = mPosition;
@@ -101,32 +100,85 @@ public class FragmentMovie extends Fragment {
      * method for update recyclerView with movies.
      * Do a background UI for a internet connection.
      */
-    public void updateMoviesTask(Cursor cursor) {
-        ArrayList<Movie> movies = new ArrayList<>();
-        mMovieAdapter.clear();
-        if (cursor == null) {
-            // get a movies
-            if (Utils.checkConn(getContext()) && getView().findViewById(R.id.empty_view) != null) {
+    public void updateMoviesTask() {
+        MyReceiverResult receiverResult = new MyReceiverResult(new Handler());
+
+        Intent intent = new Intent(getActivity(), MoviesService.class);
+        intent.putExtra(MoviesService.PREFERENCES_ORDER_QUERY_EXTRA,
+                Utils.getPreferredOrder(getActivity()));
+        intent.putExtra(KEY_RECEIVER, receiverResult);
+
+        getActivity().startService(intent);
+
+//        ArrayList<Movie> movies = new ArrayList<>();
+//        mMovieAdapter.clear();
+//        if (cursor == null) {
+//            // get a movies
+//            if (Utils.checkConnection(getContext()) && getView().findViewById(R.id.empty_view) != null) {
+//                getView().findViewById(R.id.empty_view).setVisibility(GONE);
+//                movies = new TheMoviesDBAPI().getMovies(getContext());
+//            } else if (getView().findViewById(R.id.empty_view) != null) {
+//                getView().findViewById(R.id.empty_view).setVisibility(View.VISIBLE);
+//            }
+//        } else {
+//            while (cursor.moveToNext()) {
+//                movies.add(new Movie(cursor));
+//            }
+//            if (!movies.isEmpty() && getView().findViewById(R.id.empty_view) != null)
+//                getView().findViewById(R.id.empty_view).setVisibility(GONE);
+//            else if (getView().findViewById(R.id.empty_view) != null) {
+//                TextView textView = (TextView) getView().findViewById(R.id.empty_view);
+//                textView.setText(getString(R.string.no_movie_favorite));
+//                textView.setVisibility(View.VISIBLE);
+//            }
+//        }
+//        // add movies in recycler view
+//        for (Movie m : movies)
+//            mMovieAdapter.add(m);
+    }
+
+    class MyReceiverResult extends ResultReceiver {
+        /**
+         * Create a new ResultReceive to receive results.  Your
+         * {@link #onReceiveResult} method will be called from the thread running
+         * <var>handler</var> if given, or from an arbitrary thread if null.
+         *
+         * @param handler
+         */
+        public MyReceiverResult(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            Log.v(LOG_TAG, "onReceiveResult");
+            mMovieAdapter.clear();
+            ArrayList<Movie> movies = (ArrayList<Movie>) resultData.getSerializable(KEY_RESULT_QUERY_EXTRA);
+            for (Movie m : movies)
+                mMovieAdapter.add(m);
+
+            if (((MainActivity) getActivity()).isTwoPane())
+                ((MainActivity) getActivity()).onMovieChanged(mMovieAdapter.getFirstMovie());
+
+
+            setEmptyMessage(movies);
+        }
+
+        private void setEmptyMessage(ArrayList<Movie> movies) {
+            if (Utils.getPreferredOrder(getContext()).equals(getString(R.string.value_favorites_pref_order)) &&
+                    !movies.isEmpty()) {
                 getView().findViewById(R.id.empty_view).setVisibility(GONE);
-                movies = new TheMoviesDBAPI().getMovies(getContext());
-            } else if (getView().findViewById(R.id.empty_view) != null) {
-                getView().findViewById(R.id.empty_view).setVisibility(View.VISIBLE);
-            }
-        } else {
-            while (cursor.moveToNext()) {
-                movies.add(new Movie(cursor));
-            }
-            if (!movies.isEmpty() && getView().findViewById(R.id.empty_view) != null)
-                getView().findViewById(R.id.empty_view).setVisibility(GONE);
-            else if (getView().findViewById(R.id.empty_view) != null) {
+            } else if (Utils.getPreferredOrder(getContext()).equals(getString(R.string.value_favorites_pref_order))) {
                 TextView textView = (TextView) getView().findViewById(R.id.empty_view);
                 textView.setText(getString(R.string.no_movie_favorite));
                 textView.setVisibility(View.VISIBLE);
+            } else if (Utils.checkConnection(getContext()) && getView().findViewById(R.id.empty_view) != null) {
+                getView().findViewById(R.id.empty_view).setVisibility(GONE);
+            } else {
+                getView().findViewById(R.id.empty_view).setVisibility(View.INVISIBLE);
             }
         }
-        // add movies in recycler view
-        for (Movie m : movies)
-            mMovieAdapter.add(m);
+
     }
 
 }

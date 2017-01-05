@@ -3,13 +3,19 @@ package br.com.etm.popularmovies;
 import android.content.Intent;
 import android.database.Cursor;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.PopupMenu;
+import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 
 import br.com.etm.popularmovies.data.PopularMovieContract;
 import br.com.etm.popularmovies.domains.Movie;
+import br.com.etm.popularmovies.utils.Utils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mCriteriaOrder = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_pref_order), getString(R.string.value_default_pref_order));
+        mCriteriaOrder = Utils.getPreferredOrder(this);
 
         if (findViewById(R.id.detail_movie_container) != null) {
             mTwoPane = true;
@@ -65,24 +71,15 @@ public class MainActivity extends AppCompatActivity {
         return mTwoPane;
     }
 
-    public String getCriteriaOrder() {
-        return mCriteriaOrder;
-    }
-
-
     @Override
     protected void onResume() {
         super.onResume();
 
-        String criteria = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_pref_order), getString(R.string.value_default_pref_order));
+        String criteria = Utils.getPreferredOrder(this);
         if (!mCriteriaOrder.equals(criteria)) {
             FragmentMovie fm = (FragmentMovie) getSupportFragmentManager().findFragmentById(R.id.fragment_movie);
             if (fm != null) {
-                if (criteria.equals(getString(R.string.value_favorites_pref_order))) {
-                    Cursor cursor = this.getContentResolver().query(PopularMovieContract.MovieEntry.CONTENT_URI, null, null, null, null);
-                    fm.updateMoviesTask(cursor);
-                } else fm.updateMoviesTask(null);
-
+                fm.updateMoviesTask();
                 if (mTwoPane)
                     onMovieChanged(fm.getMovieAdapter().getFirstMovie());
             }
@@ -98,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -105,6 +103,20 @@ public class MainActivity extends AppCompatActivity {
                 // Do a intent for activity settings
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
+
+            case R.id.it_popular:
+                Utils.setPreferredOrder(getApplicationContext(), getString(R.string.value_default_pref_order));
+                onResume();
+                break;
+            case R.id.it_top_rated:
+                Utils.setPreferredOrder(getApplicationContext(), getString(R.string.value_top_rated_pref_order));
+                onResume();
+                break;
+            case R.id.it_favorites:
+                Utils.setPreferredOrder(getApplicationContext(), getString(R.string.value_favorites_pref_order));
+                onResume();
+                break;
+
         }
 
         return super.onOptionsItemSelected(item);
