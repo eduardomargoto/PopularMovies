@@ -198,14 +198,20 @@ public class FragmentDetailMovie extends Fragment {
 
 
     public void updateReviews() {
-        MyReviewReceiver reviewReceiver = new MyReviewReceiver(new Handler());
 
-        Intent intent = new Intent(getActivity(), ReviewsService.class);
-        intent.putExtra(ReviewsService.MOVIE_ID_QUERY_EXTRA, String.valueOf(mMovie.getMovieId()));
-        intent.putExtra(KEY_RECEIVER, reviewReceiver);
+        try {
 
-        getActivity().startService(intent);
 
+            MyReviewReceiver reviewReceiver = new MyReviewReceiver(new Handler());
+
+            Intent intent = new Intent(getActivity(), ReviewsService.class);
+            intent.putExtra(ReviewsService.MOVIE_ID_QUERY_EXTRA, String.valueOf(mMovie.getMovieId()));
+            intent.putExtra(KEY_RECEIVER, reviewReceiver);
+
+            getActivity().startService(intent);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
 //        if (mReviewAdapter != null) {
 //            mReviewAdapter.clear();
 //            ArrayList<Review> reviews = new TheMoviesDBAPI().getReviews((int) mMovie.getMovieId());
@@ -219,14 +225,18 @@ public class FragmentDetailMovie extends Fragment {
     }
 
     public void updateTrailers() {
-        MyTrailerReceiver trailerReceiver = new MyTrailerReceiver(new Handler());
+        try {
+            MyTrailerReceiver trailerReceiver = new MyTrailerReceiver(new Handler());
 
-        Intent intent = new Intent(getActivity(), TrailersService.class);
-        intent.putExtra(TrailersService.MOVIE_ID_QUERY_EXTRA, String.valueOf(mMovie.getMovieId()));
-        intent.putExtra(KEY_RECEIVER, trailerReceiver);
+            Intent intent = new Intent(getActivity(), TrailersService.class);
+            intent.putExtra(TrailersService.MOVIE_ID_QUERY_EXTRA, String.valueOf(mMovie.getMovieId()));
+            intent.putExtra(KEY_RECEIVER, trailerReceiver);
 
-        getActivity().startService(intent);
+            getActivity().startService(intent);
 
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
 //        if (mTrailerAdapter != null) {
 //            mTrailerAdapter.clear();
 //            ArrayList<Trailer> trailers = new TheMoviesDBAPI().getTrailers((int) mMovie.getMovieId());
